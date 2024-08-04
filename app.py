@@ -8,8 +8,8 @@ import tarfile
 
 # กำหนดค่า AWS S3
 bucket_name = 'my-watermelon-models'
-model_file_name = 'model_keras.tar.gz'
-model_file_path = 'model/model.keras'
+model_file_name = 'model.h5'
+model_file_path = 'model/model.h5'
 
 # กำหนด AWS credentials และ Region จาก Streamlit secrets
 aws_access_key_id = 'AKIAQKGGXRGHVXFZREWH'
@@ -31,12 +31,8 @@ s3 = boto3.client(
 try:
     if not os.path.exists(model_file_path):
         st.info(f"Downloading {model_file_name} from S3 bucket {bucket_name}...")
-        s3.download_file(bucket_name, model_file_name, 'model/model_keras.tar.gz')
+        s3.download_file(bucket_name, model_file_name, model_file_path)
         st.success("Model downloaded successfully.")
-
-        # แยกไฟล์ที่บีบอัด
-        with tarfile.open('model/model_keras.tar.gz', 'r:gz') as tar:
-            tar.extractall(path='model/')
 except s3.exceptions.NoSuchBucket:
     st.error(f"The specified bucket does not exist: {bucket_name}")
 except s3.exceptions.NoSuchKey:
@@ -84,4 +80,6 @@ if uploaded_file is not None:
     st.success(f"ผลการวิเคราะห์: {result}")
 
     confidence = np.max(prediction)
+    st.write(f"ความมั่นใจของการทำนาย: {confidence:.2f}")
+max(prediction)
     st.write(f"ความมั่นใจของการทำนาย: {confidence:.2f}")
