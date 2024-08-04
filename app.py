@@ -12,8 +12,8 @@ model_file_name = 'model_keras.tar.gz'
 model_file_path = 'model/model.keras'
 
 # กำหนด AWS credentials และ Region จาก Streamlit secrets
-aws_access_key_id = st.secrets["AWS_ACCESS_KEY_ID"]
-aws_secret_access_key = st.secrets["AWS_SECRET_ACCESS_KEY"]
+aws_access_key_id = 'AKIAQKGGXRGHVXFZREWH'
+aws_secret_access_key = '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'
 region_name = 'ap-southeast-1'
 
 # ตรวจสอบว่าโฟลเดอร์ model มีอยู่หรือไม่ ถ้าไม่มีให้สร้าง
