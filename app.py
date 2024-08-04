@@ -4,7 +4,6 @@ import librosa
 import tensorflow as tf
 import boto3
 import os
-import tarfile
 
 # กำหนดค่า AWS S3
 bucket_name = 'my-watermelon-models'
@@ -12,8 +11,8 @@ model_file_name = 'model.h5'
 model_file_path = 'model/model.h5'
 
 # กำหนด AWS credentials และ Region จาก Streamlit secrets
-aws_access_key_id = 'AKIAQKGGXRGHVXFZREWH'
-aws_secret_access_key = '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'
+aws_access_key_id = st.secrets["AWS_ACCESS_KEY_ID"]
+aws_secret_access_key = st.secrets["AWS_SECRET_ACCESS_KEY"]
 region_name = 'ap-southeast-1'
 
 # ตรวจสอบว่าโฟลเดอร์ model มีอยู่หรือไม่ ถ้าไม่มีให้สร้าง
@@ -80,6 +79,4 @@ if uploaded_file is not None:
     st.success(f"ผลการวิเคราะห์: {result}")
 
     confidence = np.max(prediction)
-    st.write(f"ความมั่นใจของการทำนาย: {confidence:.2f}")
-max(prediction)
     st.write(f"ความมั่นใจของการทำนาย: {confidence:.2f}")
