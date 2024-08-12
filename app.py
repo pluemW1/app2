@@ -50,7 +50,7 @@ except Exception as e:
     st.error(f"Error loading the model: {e}")
     st.stop()
 
-def preprocess_audio_file(file_path, target_length=174):
+def preprocess_audio_file(file_path, max_pad_len=174):
     try:
         # ใช้ pydub เพื่อเปิดไฟล์เสียงและแปลงเป็น wav
         audio = AudioSegment.from_file(file_path)
@@ -63,24 +63,21 @@ def preprocess_audio_file(file_path, target_length=174):
         zcr = librosa.feature.zero_crossing_rate(data)
         chroma = librosa.feature.chroma_stft(y=data, sr=sample_rate)
 
-        # Find the maximum length for padding or truncating
         feature_len = max(mfccs.shape[1], zcr.shape[1], chroma.shape[1])
-        pad_width = target_length - feature_len
-
+        pad_width = max_pad_len - feature_len
+        
         if pad_width > 0:
             mfccs = np.pad(mfccs, pad_width=((0, 0), (0, pad_width)), mode='constant')
             zcr = np.pad(zcr, pad_width=((0, pad_width)), mode='constant')
             chroma = np.pad(chroma, pad_width=((0, 0), (0, pad_width)), mode='constant')
         else:
-            mfccs = mfccs[:, :target_length]
-            zcr = zcr[:, :target_length]
-            chroma = chroma[:, :target_length]
+            mfccs = mfccs[:, :max_pad_len]
+            zcr = zcr[:, :max_pad_len]
+            chroma = chroma[:, :max_pad_len]
 
-        # Combine MFCC, ZCR, and Chroma features into one array
+        # รวม MFCCs, ZCR, และ Chroma เข้าด้วยกัน
         combined_feature = np.vstack([mfccs, zcr, chroma])
-        
-        # Pad or truncate the combined features to match the input shape required by the model
-        combined_feature = np.pad(combined_feature, pad_width=((0, target_length - combined_feature.shape[1]), (0, 0)), mode='constant')
+        combined_feature = np.pad(combined_feature, pad_width=((0, model.input_shape[1] - combined_feature.shape[0]), (0, 0)), mode='constant')
         combined_feature = np.expand_dims(combined_feature, axis=-1)
 
         return combined_feature
