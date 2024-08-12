@@ -10,8 +10,8 @@ from moviepy.editor import VideoFileClip
 from streamlit_webrtc import webrtc_streamer, AudioProcessorBase, WebRtcMode
 # กำหนดค่า AWS S3
 bucket_name = 'my-watermelon-models'
-model_file_name = 'model3type_ripeness2.h5'
-model_file_path = 'model/model3type_ripeness2.h5'
+model_file_name = 'model3type_ripeness_with_temporal.h5'
+model_file_path = 'model/model3type_ripeness_with_temporal.h5'
 
 # กำหนด AWS credentials และ Region จาก Streamlit secrets
 aws_access_key_id = 'AKIAQKGGXRGHVXFZREWH'
