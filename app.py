@@ -10,8 +10,8 @@ from moviepy.editor import VideoFileClip
 from streamlit_webrtc import webrtc_streamer, AudioProcessorBase, WebRtcMode
 # กำหนดค่า AWS S3
 bucket_name = 'my-watermelon-models'
-model_file_name = 'model2type.h5'
-model_file_path = 'model/model2type.h5'
+model_file_name = 'model3type_ripeness_with_temporal.h5'
+model_file_path = 'model/model3type_ripeness_with_temporal.h5'
 
 # กำหนด AWS credentials และ Region จาก Streamlit secrets
 aws_access_key_id = 'AKIAQKGGXRGHVXFZREWH'
@@ -50,7 +50,7 @@ except Exception as e:
     st.error(f"Error loading the model: {e}")
     st.stop()
 
-def preprocess_audio_file(file_path, target_length=174):
+def preprocess_audio_file(file_path, max_pad_len=174):
     try:
         # ใช้ pydub เพื่อเปิดไฟล์เสียงและแปลงเป็น wav
         audio = AudioSegment.from_file(file_path)
@@ -60,19 +60,31 @@ def preprocess_audio_file(file_path, target_length=174):
         
         data, sample_rate = librosa.load(temp_wav_path)
         mfccs = librosa.feature.mfcc(y=data, sr=sample_rate, n_mfcc=40)
+        zcr = librosa.feature.zero_crossing_rate(data)
+        chroma = librosa.feature.chroma_stft(y=data, sr=sample_rate)
 
-        # Pad or truncate the MFCCs to the target length
-        if mfccs.shape[1] < target_length:
-            pad_width = target_length - mfccs.shape[1]
+        feature_len = max(mfccs.shape[1], zcr.shape[1], chroma.shape[1])
+        pad_width = max_pad_len - feature_len
+        
+        if pad_width > 0:
             mfccs = np.pad(mfccs, pad_width=((0, 0), (0, pad_width)), mode='constant')
+            zcr = np.pad(zcr, pad_width=((0, pad_width)), mode='constant')
+            chroma = np.pad(chroma, pad_width=((0, 0), (0, pad_width)), mode='constant')
         else:
-            mfccs = mfccs[:, :target_length]
+            mfccs = mfccs[:, :max_pad_len]
+            zcr = zcr[:, :max_pad_len]
+            chroma = chroma[:, :max_pad_len]
 
-        mfccs_processed = np.expand_dims(mfccs, axis=-1)
-        return mfccs_processed
+        # รวม MFCCs, ZCR, และ Chroma เข้าด้วยกัน
+        combined_feature = np.vstack([mfccs, zcr, chroma])
+        combined_feature = np.pad(combined_feature, pad_width=((0, model.input_shape[1] - combined_feature.shape[0]), (0, 0)), mode='constant')
+        combined_feature = np.expand_dims(combined_feature, axis=-1)
+
+        return combined_feature
     except FileNotFoundError as e:
         st.error("ffmpeg not found. Please ensure ffmpeg is installed and added to PATH.")
         raise e
+
 
 class AudioProcessor(AudioProcessorBase):
     def __init__(self):
@@ -137,8 +149,15 @@ if uploaded_file is not None:
         processed_data = preprocess_audio_file(file_path)
         prediction = model.predict(np.expand_dims(processed_data, axis=0))
         predicted_class = np.argmax(prediction)
-        result = 'สุก' if predicted_class == 0 else 'ไม่สุก'
-        
+
+        # แปลงค่าให้เป็นชื่อประเภทของความสุก
+        if predicted_class == 0:
+            result = 'สุก'
+        elif predicted_class == 1:
+            result = 'กึ่งสุก'
+        else:
+            result = 'ไม่สุก'
+
         st.success(f"ผลการวิเคราะห์: {result}")
 
         confidence = np.max(prediction)
