@@ -154,5 +154,3 @@ if uploaded_file is not None:
         st.write(f"ความมั่นใจของการทำนาย: {confidence:.2f}")
     except Exception as e:
         st.error(f"Error processing uploaded file: {e}")
-
-
