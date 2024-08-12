@@ -60,21 +60,33 @@ def preprocess_audio_file(file_path, target_length=174):
         
         data, sample_rate = librosa.load(temp_wav_path)
         mfccs = librosa.feature.mfcc(y=data, sr=sample_rate, n_mfcc=40)
+        zcr = librosa.feature.zero_crossing_rate(data)
+        chroma = librosa.feature.chroma_stft(y=data, sr=sample_rate)
 
-        # Pad or truncate the MFCCs to the target length
-        if mfccs.shape[1] < target_length:
-            pad_width = target_length - mfccs.shape[1]
+        # Find the maximum length for padding or truncating
+        feature_len = max(mfccs.shape[1], zcr.shape[1], chroma.shape[1])
+        pad_width = target_length - feature_len
+
+        if pad_width > 0:
             mfccs = np.pad(mfccs, pad_width=((0, 0), (0, pad_width)), mode='constant')
+            zcr = np.pad(zcr, pad_width=((0, pad_width)), mode='constant')
+            chroma = np.pad(chroma, pad_width=((0, 0), (0, pad_width)), mode='constant')
         else:
             mfccs = mfccs[:, :target_length]
+            zcr = zcr[:, :target_length]
+            chroma = chroma[:, :target_length]
 
-        mfccs_processed = np.expand_dims(mfccs, axis=-1)
-        return mfccs_processed
+        # Combine MFCC, ZCR, and Chroma features into one array
+        combined_feature = np.vstack([mfccs, zcr, chroma])
+        
+        # Pad or truncate the combined features to match the input shape required by the model
+        combined_feature = np.pad(combined_feature, pad_width=((0, target_length - combined_feature.shape[1]), (0, 0)), mode='constant')
+        combined_feature = np.expand_dims(combined_feature, axis=-1)
+
+        return combined_feature
     except FileNotFoundError as e:
         st.error("ffmpeg not found. Please ensure ffmpeg is installed and added to PATH.")
         raise e
-
-
 
 class AudioProcessor(AudioProcessorBase):
     def __init__(self):
