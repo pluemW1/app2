@@ -158,15 +158,17 @@ if uploaded_file is not None:
         # Map the prediction to display the corresponding image and label
         if predicted_class == 0:
             st.write("แตงโมสุก (แตงโมที่มีเนื้อเป็นสีแดงเข้ม)")
-            result = 'แตงโมสุก (แตงโมที่มีเนื้อเป็นสีแดงเข้ม)'
-            st.image(ripe_image, caption=result)
+            #result = 'แตงโมสุก (แตงโมที่มีเนื้อเป็นสีแดงเข้ม)'
+            st.image(ripe_image)
             
         elif predicted_class == 1:
-            result = 'แตงโมกึ่งสุก (แตงโมที่มีเนื้อเป็นสีแดงอ่อน)'
-            st.image(semiripe_image, caption=result)
+            st.write("แตงโมกึ่งสุก (แตงโมที่มีเนื้อเป็นสีแดงอ่อน)")
+            #result = 'แตงโมกึ่งสุก (แตงโมที่มีเนื้อเป็นสีแดงอ่อน)'
+            st.image(semiripe_image)
         else:
-            result = 'แตงโมไม่สุก (แตงโมที่มีเนื้อเป็นขาวอมชมพู) หรืออาจไม่ใช่เสียงการเคาะแตงโม'
-            st.image(unripe_image, caption=result)
+            st.write("แตงโมไม่สุก (แตงโมที่มีเนื้อเป็นขาวอมชมพู) หรืออาจไม่ใช่เสียงการเคาะแตงโม")
+            #result = 'แตงโมไม่สุก (แตงโมที่มีเนื้อเป็นขาวอมชมพู) หรืออาจไม่ใช่เสียงการเคาะแตงโม'
+            st.image(unripe_image)
 
         # Display confidence score
         #confidence = np.max(prediction)
