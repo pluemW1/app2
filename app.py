@@ -55,6 +55,7 @@ try:
 except Exception as e:
     st.error(f"Error loading the model: {e}")
     st.stop()
+    
 def preprocess_audio_file(file_path, target_length=862):
     try:
         # ใช้ pydub เพื่อเปิดไฟล์เสียงและแปลงเป็น wav
@@ -86,7 +87,11 @@ def preprocess_audio_file(file_path, target_length=862):
         # รวม MFCCs, ZCR, และ Chroma เข้าด้วยกัน
         combined_feature = np.vstack([mfccs, zcr, chroma])
         
-        # ขยายขนาดให้ตรงกับ input ของโมเดล (ปรับตาม input_shape ของโมเดล)
+        # ขนาดที่คาดหวังโดยโมเดล (ตรวจสอบให้ตรงกับ input_shape ของโมเดล)
+        input_height = 53  # ใช้ค่า height ของ input_shape ของโมเดล
+        if combined_feature.shape[0] != input_height:
+            combined_feature = np.pad(combined_feature, pad_width=((0, input_height - combined_feature.shape[0]), (0, 0)), mode='constant')
+        
         combined_feature = np.expand_dims(combined_feature, axis=-1)
         
         return combined_feature
@@ -94,6 +99,7 @@ def preprocess_audio_file(file_path, target_length=862):
     except FileNotFoundError as e:
         st.error("ffmpeg not found. Please ensure ffmpeg is installed and added to PATH.")
         raise e
+
 
 class AudioProcessor(AudioProcessorBase):
     def __init__(self):
