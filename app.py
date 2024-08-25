@@ -56,7 +56,7 @@ except Exception as e:
     st.error(f"Error loading the model: {e}")
     st.stop()
     
-def preprocess_audio_file(file_path, target_length=862):
+def preprocess_audio_file(file_path, target_height=58, target_width=172):
     try:
         # ใช้ pydub เพื่อเปิดไฟล์เสียงและแปลงเป็น wav
         audio = AudioSegment.from_file(file_path)
@@ -72,27 +72,29 @@ def preprocess_audio_file(file_path, target_length=862):
         zcr = librosa.feature.zero_crossing_rate(data)
         chroma = librosa.feature.chroma_stft(y=data, sr=sample_rate)
         
-        # จัดการ padding หรือ truncation ให้ตรงกับ target_length
-        def pad_or_truncate(feature, target_length):
-            if feature.shape[1] < target_length:
-                pad_width = target_length - feature.shape[1]
+        # ปรับขนาดให้ตรงกับ target_width
+        def pad_or_truncate(feature, target_width):
+            if feature.shape[1] < target_width:
+                pad_width = target_width - feature.shape[1]
                 return np.pad(feature, pad_width=((0, 0), (0, pad_width)), mode='constant')
             else:
-                return feature[:, :target_length]
+                return feature[:, :target_width]
         
-        mfccs = pad_or_truncate(mfccs, target_length)
-        zcr = pad_or_truncate(zcr, target_length)
-        chroma = pad_or_truncate(chroma, target_length)
+        mfccs = pad_or_truncate(mfccs, target_width)
+        zcr = pad_or_truncate(zcr, target_width)
+        chroma = pad_or_truncate(chroma, target_width)
         
         # รวม MFCCs, ZCR, และ Chroma เข้าด้วยกัน
         combined_feature = np.vstack([mfccs, zcr, chroma])
         
-        # ขนาดที่คาดหวังโดย Conv2D layer แรก
-        height, width = 58, 172
-        if combined_feature.shape[0] != height:
-            combined_feature = np.pad(combined_feature, pad_width=((0, height - combined_feature.shape[0]), (0, 0)), mode='constant')
+        # ตรวจสอบขนาดให้ตรงกับขนาดที่คาดหวังใน Conv2D layer
+        if combined_feature.shape[0] != target_height:
+            combined_feature = np.pad(combined_feature, pad_width=((0, target_height - combined_feature.shape[0]), (0, 0)), mode='constant')
         
-        combined_feature = np.resize(combined_feature, (height, width))
+        # ปรับขนาดข้อมูลให้ตรงกับ target_height และ target_width
+        if combined_feature.shape[1] != target_width:
+            combined_feature = np.resize(combined_feature, (target_height, target_width))
+        
         combined_feature = np.expand_dims(combined_feature, axis=-1)  # เพิ่ม channel dimension
         
         return combined_feature
@@ -100,6 +102,7 @@ def preprocess_audio_file(file_path, target_length=862):
     except FileNotFoundError as e:
         st.error("ffmpeg not found. Please ensure ffmpeg is installed and added to PATH.")
         raise e
+
 
 
 class AudioProcessor(AudioProcessorBase):
