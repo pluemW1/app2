@@ -11,7 +11,7 @@ from streamlit_webrtc import webrtc_streamer, AudioProcessorBase, WebRtcMode
 from PIL import Image
 # กำหนดค่า AWS S3
 bucket_name = 'my-watermelon-models'
-model_file_name = '1.h5'
+model_file_name = '2.h5'
 model_file_path = 'model/1.h5'
 
 # กำหนด AWS credentials และ Region จาก Streamlit secrets
