@@ -23,9 +23,9 @@ class AudioProcessor(AudioProcessorBase):
     pass
 
 # Load your watermelon images
-unripe_image = Image.open("/image/watermelon_unripe.jpg")
-semiripe_image = Image.open("/image/watermelon_semiripe.jpg")
-ripe_image = Image.open("/image/watermelon_ripe.jpg")
+unripe_image = Image.open("image/watermelon_unripe.jpg")
+semiripe_image = Image.open("image/watermelon_semiripe.jpg")
+ripe_image = Image.open("image/watermelon_ripe.jpg")
 
 # Your WebRTC streaming code remains the same...
 
