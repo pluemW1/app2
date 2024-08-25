@@ -93,25 +93,24 @@ def preprocess_audio_file(file_path, max_pad_len=174):
 '''
 def preprocess_audio_file(file_path, max_pad_len=174):
     try:
-        # Use pydub to open the audio file and convert it to wav format
+        # Use pydub to open the audio file and convert it to wav
         audio = AudioSegment.from_file(file_path)
         audio = audio.set_frame_rate(16000).set_channels(1)  # Set sample rate and channels
         temp_wav_path = "temp.wav"
         audio.export(temp_wav_path, format="wav")
 
-        # Load the audio file using librosa
+        # Load the audio data using librosa
         data, sample_rate = librosa.load(temp_wav_path)
 
         # Extract MFCCs, Zero-Crossing Rate (ZCR), and Chroma features
         mfccs = librosa.feature.mfcc(y=data, sr=sample_rate, n_mfcc=40)
-        zcr = librosa.feature.zero_crossing_rate(y=data)
+        zcr = librosa.feature.zero_crossing_rate(data)
         chroma = librosa.feature.chroma_stft(y=data, sr=sample_rate)
 
-        # Determine the length of the features to pad or truncate accordingly
+        # Calculate the maximum feature length and pad if necessary
         feature_len = max(mfccs.shape[1], zcr.shape[1], chroma.shape[1])
         pad_width = max_pad_len - feature_len
 
-        # Padding or truncating features to ensure consistent dimensions
         if pad_width > 0:
             mfccs = np.pad(mfccs, pad_width=((0, 0), (0, pad_width)), mode='constant')
             zcr = np.pad(zcr, pad_width=((0, pad_width)), mode='constant')
@@ -121,19 +120,19 @@ def preprocess_audio_file(file_path, max_pad_len=174):
             zcr = zcr[:, :max_pad_len]
             chroma = chroma[:, :max_pad_len]
 
-        # Combine MFCCs, ZCR, and Chroma features into a single feature array
+        # Combine MFCCs, ZCR, and Chroma into one feature array
         combined_feature = np.vstack([mfccs, zcr, chroma])
 
-        # Ensure the combined feature matches the input shape of the model by padding if necessary
+        # Ensure the feature array matches the model's input shape by padding if needed
         combined_feature = np.pad(combined_feature, pad_width=((0, model.input_shape[1] - combined_feature.shape[0]), (0, 0)), mode='constant')
-        
-        # Expand the dimension to add the channel axis (required for Conv2D input)
+
+        # Expand the dimensions for model input
         combined_feature = np.expand_dims(combined_feature, axis=-1)
 
         return combined_feature
 
     except FileNotFoundError as e:
-        st.error("ffmpeg not found. Please ensure ffmpeg is installed and added to PATH.")
+        print("ffmpeg not found. Please ensure ffmpeg is installed and added to PATH.")
         raise e
 
 class AudioProcessor(AudioProcessorBase):
