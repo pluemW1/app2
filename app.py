@@ -55,7 +55,7 @@ try:
 except Exception as e:
     st.error(f"Error loading the model: {e}")
     st.stop()
-'''
+
 def preprocess_audio_file(file_path, max_pad_len=174):
     try:
         # ใช้ pydub เพื่อเปิดไฟล์เสียงและแปลงเป็น wav
@@ -90,24 +90,7 @@ def preprocess_audio_file(file_path, max_pad_len=174):
     except FileNotFoundError as e:
         st.error("ffmpeg not found. Please ensure ffmpeg is installed and added to PATH.")
         raise e
-'''
-def preprocess_audio_file(file_path, target_length=174):
-    data, sample_rate = librosa.load(file_path)
-    mfccs = librosa.feature.mfcc(y=data, sr=sample_rate, n_mfcc=40)
-    chroma = librosa.feature.chroma_stft(y=data, sr=sample_rate)
-    spec_contrast = librosa.feature.spectral_contrast(y=data, sr=sample_rate)
-    zcr = librosa.feature.zero_crossing_rate(y=data)
-    feature = np.concatenate((mfccs, chroma, spec_contrast, zcr), axis=0)
 
-    pad_width = target_length - feature.shape[1]
-    if pad_width > 0:
-        feature = np.pad(feature, pad_width=((0, 0), (0, pad_width)), mode='constant')
-    else:
-        feature = feature[:, :target_length]
-
-    mfccs_processed = np.expand_dims(feature, axis=-1)
-    return mfccs_processed
-    
 class AudioProcessor(AudioProcessorBase):
     def __init__(self):
         self.audio_buffer = []
