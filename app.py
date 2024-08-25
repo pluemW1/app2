@@ -168,8 +168,8 @@ if uploaded_file is not None:
             st.image(unripe_image, caption=result)
 
         # Display confidence score
-        confidence = np.max(prediction)
-        st.write(f"ความมั่นใจของการทำนาย: {confidence:.2f}")
+        #confidence = np.max(prediction)
+        #st.write(f"ความมั่นใจของการทำนาย: {confidence:.2f}")
 
     except Exception as e:
         st.error(f"Error processing uploaded file: {e}")
