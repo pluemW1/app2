@@ -91,49 +91,24 @@ def preprocess_audio_file(file_path, max_pad_len=174):
         st.error("ffmpeg not found. Please ensure ffmpeg is installed and added to PATH.")
         raise e
 '''
-def preprocess_audio_file(file_path, max_pad_len=174):
-    try:
-        # Use pydub to open the audio file and convert it to wav
-        audio = AudioSegment.from_file(file_path)
-        audio = audio.set_frame_rate(16000).set_channels(1)  # Set sample rate and channels
-        temp_wav_path = "temp.wav"
-        audio.export(temp_wav_path, format="wav")
+def preprocess_audio_file(file_path, target_length=862):
+    # Load the audio file using librosa
+    data, sample_rate = librosa.load(file_path)
+    
+    # Extract MFCCs
+    mfccs = librosa.feature.mfcc(y=data, sr=sample_rate, n_mfcc=40)
 
-        # Load the audio data using librosa
-        data, sample_rate = librosa.load(temp_wav_path)
+    # Pad or truncate the MFCCs to match the target length
+    if mfccs.shape[1] < target_length:
+        pad_width = target_length - mfccs.shape[1]
+        mfccs = np.pad(mfccs, pad_width=((0, 0), (0, pad_width)), mode='constant')
+    else:
+        mfccs = mfccs[:, :target_length]
 
-        # Extract MFCCs, Zero-Crossing Rate (ZCR), and Chroma features
-        mfccs = librosa.feature.mfcc(y=data, sr=sample_rate, n_mfcc=40)
-        zcr = librosa.feature.zero_crossing_rate(data)
-        chroma = librosa.feature.chroma_stft(y=data, sr=sample_rate)
+    # Expand the dimensions to match the expected input format for models
+    mfccs_processed = np.expand_dims(mfccs, axis=-1)
 
-        # Calculate the maximum feature length and pad if necessary
-        feature_len = max(mfccs.shape[1], zcr.shape[1], chroma.shape[1])
-        pad_width = max_pad_len - feature_len
-
-        if pad_width > 0:
-            mfccs = np.pad(mfccs, pad_width=((0, 0), (0, pad_width)), mode='constant')
-            zcr = np.pad(zcr, pad_width=((0, pad_width)), mode='constant')
-            chroma = np.pad(chroma, pad_width=((0, 0), (0, pad_width)), mode='constant')
-        else:
-            mfccs = mfccs[:, :max_pad_len]
-            zcr = zcr[:, :max_pad_len]
-            chroma = chroma[:, :max_pad_len]
-
-        # Combine MFCCs, ZCR, and Chroma into one feature array
-        combined_feature = np.vstack([mfccs, zcr, chroma])
-
-        # Ensure the feature array matches the model's input shape by padding if needed
-        combined_feature = np.pad(combined_feature, pad_width=((0, model.input_shape[1] - combined_feature.shape[0]), (0, 0)), mode='constant')
-
-        # Expand the dimensions for model input
-        combined_feature = np.expand_dims(combined_feature, axis=-1)
-
-        return combined_feature
-
-    except FileNotFoundError as e:
-        print("ffmpeg not found. Please ensure ffmpeg is installed and added to PATH.")
-        raise e
+    return mfccs_processed
 
 class AudioProcessor(AudioProcessorBase):
     def __init__(self):
