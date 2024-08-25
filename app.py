@@ -157,6 +157,7 @@ if uploaded_file is not None:
 
         # Map the prediction to display the corresponding image and label
         if predicted_class == 0:
+            st.write("แตงโมสุก (แตงโมที่มีเนื้อเป็นสีแดงเข้ม)")
             result = 'แตงโมสุก (แตงโมที่มีเนื้อเป็นสีแดงเข้ม)'
             st.image(ripe_image, caption=result)
             
