@@ -164,7 +164,7 @@ if uploaded_file is not None:
             result = 'แตงโมกึ่งสุก (แตงโมที่มีเนื้อเป็นสีแดงอ่อน)'
             st.image(semiripe_image, caption=result)
         else:
-            result = 'แตงโมไม่สุก (แตงโมที่มีเนื้อเป็นขาวอมชมพู)'
+            result = 'แตงโมไม่สุก (แตงโมที่มีเนื้อเป็นขาวอมชมพู) หรืออาจไม่ใช่เสียงการเคาะแตงโม'
             st.image(unripe_image, caption=result)
 
         # Display confidence score
